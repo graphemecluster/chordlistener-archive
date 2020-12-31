@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>ChordPlay</title>
+<script src="Tone.js"></script>
+<script src="tonejs-instruments-master/Tonejs-Instruments.js"></script>
+<style>
+#content {
+	overflow: hidden;
+	margin: 10px 0;
+	font-family: sans-serif;
+	font-size: 22px;
+}
+#chords {
+	width: 600px;
+	height: 400px;
+	resize: none;
+	white-space: pre;
+	float: left;
+	margin-right: 10px;
+	box-sizing: border-box;
+	font-family: sans-serif;
+	font-size: 22px;
+	padding: 10px;
+}
+#preview {
+	width: 600px;
+	height: 400px;
+	white-space: pre;
+	overflow: scroll;
+	border: 1px solid grey;
+	float: left;
+	box-sizing: border-box;
+	font-family: sans-serif;
+	font-size: 22px;
+	padding: 10px;
+	line-height: 200%;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+#preview * {
+	line-height: normal;
+}
+on-note {
+	color: grey;
+	font-size: 80%;
+	font-style: normal;
+}
+beat {
+	position: relative;
+	cursor: pointer;
+}
+chord {
+	color: #333;
+	display: inline-block;
+	margin: 2px 5px;
+}
+notes {
+	display: none;
+	width: 100%;
+	text-align: center;
+	color: grey;
+	font-size: 80%;
+}
+ori {
+	display: block;
+	width: 100%;
+	text-align: center;
+}
+text {
+	font-style: italic;
+}
+barline {
+	color: lightblue;
+	margin: 0 2px;
+}
+repeat-note {
+	color: darkblue;
+	margin: 0 2px;
+}
+repeat-bar {
+	color: darkslateblue;
+	margin: 0 2px;
+	position: relative;
+	cursor: pointer;
+}
+beat:hover > *, repeat-bar:hover {
+	background-color: #f5f5f5;
+}
+num {
+	display: none;
+	position: absolute;
+	bottom: -20px;
+	left: 0;
+	right: 0;
+	height: 0;
+	text-align: center;
+	color: darkgrey;
+	font-size: 50%;
+}
+num-line {
+	position: absolute;
+	width: 1px;
+	background-color: darkgrey;
+	bottom: 3px;
+	height: 16px;
+	left: 50%;
+}
+repeat-num {
+	display: none;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 0;
+	text-align: center;
+	color: darkgrey;
+	font-size: 50%;
+}
+bar-num {
+	display: none;
+	position: relative;
+	bottom: 12px;
+	font-size: 50%;
+	color: darkgrey;
+	vertical-align: text-top;
+}
+tuplet {
+	margin: 0 4px;
+}
+tuplet-bracket {
+	color: #410;
+	margin: 0 2px;
+}
+non-chord {
+	color: darkred;
+	margin: 0 2px;
+}
+prolong {
+	color: darkgreen;
+	margin: 0 2px;
+}
+prolong-auto {
+	color: #a7c9a7;
+	margin: 0 2px;
+}
+comment {
+	color: green;
+	margin: 0 5px;
+}
+error {
+	color: red;
+	font-weight: bold;
+	text-decoration: underline;
+}
+bpm {
+	color: orange;
+	margin: 0 2px;
+}
+beat-change {
+	color: goldenrod;
+	margin: 0 2px;
+}
+button {
+	font-family: sans-serif;
+	font-size: 22px;
+}
+button:enabled {
+	cursor: pointer;
+}
+input[type=number] {
+	width: 60px;
+}
+form, select, input {
+	font-family: sans-serif;
+	font-size: 22px;
+}
+input[type=checkbox] {
+	cursor: pointer;
+	width: 18px;
+	height: 18px;
+	vertical-align: middle;
+}
+label {
+	cursor: pointer;
+	padding-left: 5px;
+	margin-bottom: 3px;
+}
+#show_notes:checked ~ #content notes {
+	display: block;
+}
+#show_nums:checked ~ #content #preview {
+	line-height: 370%;
+}
+#show_nums:checked ~ #content num,
+#show_nums:checked ~ #content repeat-num,
+#show_nums:checked ~ #content bar-num {
+	display: initial;
+}
+.highlighted, beat:hover > .highlighted {
+	background-color: #ffa;
+	border-bottom: 2px solid #f33;
+	margin-bottom: -2px;
+}
+.shaded, beat:hover > .shaded {
+	background-color: #eaf2ff;
+	border-bottom: 2px solid #f96;
+	margin-bottom: -2px;
+}
+.repeating, repeat-bar.repeating:hover {
+	background-color: #f2ffea;
+	border-bottom: 2px solid #fc4;
+	margin-bottom: -2px;
+}
+</style>
+</head>
+<body>
+<form action="javascript:void(0)" onsubmit="return false">
+	<div>
+		Instrument
+		<select name="instrument">
+			<option value="bass-electric">Electric Bass</option>
+			<option value="bassoon">Bassoon</option>
+			<option value="cello">Cello</option>
+			<option value="clarinet">Clarinet</option>
+			<option value="contrabass">Contrabass</option>
+			<option value="flute">Flute</option>
+			<option value="french-horn">French Horn</option>
+			<option value="guitar-acoustic">Acoustic Guitar</option>
+			<option value="guitar-electric">Electric Guitar</option>
+			<option value="guitar-nylon">Nylon Guitar</option>
+			<option value="harmonium">Harmonium</option>
+			<option value="harp">Harp</option>
+			<option value="organ">Organ</option>
+			<option value="piano" selected>Piano</option>
+			<option value="saxophone">Saxophone</option>
+			<option value="trombone">Trombone</option>
+			<option value="trumpet">Trumpet</option>
+			<option value="tuba">Tuba</option>
+			<option value="violin">Violin</option>
+			<option value="xylophone">Xylophone</option>
+		</select>
+	</div>
+	<div>
+		Metronome
+		<select name="metronome">
+			<option value="0">None</option>
+			<option value="1">Set 1</option>
+			<option value="2">Set 2</option>
+			<option value="3" selected>Set 3</option>
+		</select>
+		Volume
+		<input type="range" min="0" max="1" step="any" value="1" name="metronome_vol" />
+	</div>
+	<div>
+		Swing
+		<select name="swing_division">
+			<option value="8n">8th</option>
+			<option value="16n">16th</option>
+			<option value="32n">32nd</option>
+			<option value="64n">64th</option>
+		</select>
+		<input type="range" min="2" max="10" step="1" value="2" name="swing" />
+		<span id="swing_val">1:1</span>
+	</div>
+	<div>
+		Master Volume
+		<input type="range" min="0" max="1" step="any" value="0.7" name="volume" />
+	</div>
+	<input type="checkbox" name="show_notes" id="show_notes" checked /><label for="show_notes">構成音</label>
+	<input type="checkbox" name="show_nums" id="show_nums" checked /><label for="show_nums">数字</label>
+	<input type="checkbox" name="loop" id="loop" checked /><label for="loop">Loop</label>
+	<div id="content">
+	<textarea id="chords" name="chords" spellcheck="false">// け・も・の・だ・も・の
+[4=162] // [　] 内は BPM
+
+F_Am7_|Cm=Bb_|
+Bbm/Db_F/C&amp;|{2/4}G/B&amp;|{4/4}C_|
+※ ↑ {　} 内は拍子
+// F7|%|%|_|
+
+/* F===____Ab7==A7==Bb7|
+=____|Eb7==&amp;==E7|F__|_|
+F===____Ab7==A7==Bb7|
+=____|Eb7==&amp;==E7|
+F===____Eb==E==F|=__| */
+
+Bbm/Db|F/C|Em7-5==A7===Dm|
+===Bbm/Db=|F/C|G7/B|
+Bb/C&amp;&amp;&amp;&amp;=&amp;C7/Bb|=__|
+
+/* FAm7|CmBb|
+Bbm/DbF/C|G/BC|
+F/AC7/G|F7(omit3)Bb|
+Bbm/DbF/C|G/BC|
+Bbm/Db|F/C|Bbm|F/A| */
+
+Gm7|DbEb|
+F===____Eb==E==F|
+&lt;=_Ab===&gt;&lt;_G===_&gt;F|_|
+※ ↑ &lt;　&gt; 内は連音
+
+&amp;====&amp;=Db/F|=====&amp;=Eb/F|
+=====&amp;=F|=====&amp;=&amp;|
+=====&amp;=Db/F|%%%%|=====&amp;=Eb/F|
+=====&amp;=F|%%%%|
+=====&amp;=Eb/F|===&amp;&amp;&amp;&amp;F|=__|
+	</textarea>
+	<div id="preview"></div>
+	</div>
+	<input type="range" min="0" max="0" step="any" value="0" name="seekbar" disabled />
+	<div><span id="current">1.000</span>, <span id="duration">0</span></div>
+	<button id="play" disabled>Play</button>
+	<button id="pause" disabled>Pause</button>
+	<button id="stop" disabled>Stop</button>
+	<div id="loading">Loading...</div>
+</form>
+<script src="ChordNote_20191111.js"></script>
+<script src="ChordPlay_20191111.js"></script>
+</body>

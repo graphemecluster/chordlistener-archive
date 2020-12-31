@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>ChordPlay</title>
+<script src="Tone.js"></script>
+<style>
+#content {
+	overflow: hidden;
+	margin: 10px 0;
+	font-family: sans-serif;
+	font-size: 22px;
+}
+#chords {
+	width: 600px;
+	height: 400px;
+	resize: none;
+	white-space: pre;
+	float: left;
+	margin-right: 10px;
+	box-sizing: border-box;
+	font-family: sans-serif;
+	font-size: 22px;
+	padding: 10px;
+}
+#preview {
+	width: 600px;
+	height: 400px;
+	white-space: pre;
+	overflow: scroll;
+	border: 1px solid grey;
+	float: left;
+	box-sizing: border-box;
+	font-family: sans-serif;
+	font-size: 22px;
+	padding: 10px;
+	line-height: 200%;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+#preview * {
+	line-height: normal;
+}
+on-note {
+	color: grey;
+	font-size: 80%;
+	font-style: normal;
+}
+beat {
+	position: relative;
+	cursor: pointer;
+}
+chord {
+	color: #333;
+	display: inline-block;
+	margin: 2px 5px;
+}
+notes {
+	display: none;
+	width: 100%;
+	text-align: center;
+	color: grey;
+	font-size: 80%;
+}
+ori {
+	display: block;
+	width: 100%;
+	text-align: center;
+}
+text {
+	font-style: italic;
+}
+barline {
+	color: lightblue;
+	margin: 0 2px;
+}
+barline-auto {
+	color: #d6ebf2;
+	margin: 0 2px;
+}
+repeat-note {
+	color: darkblue;
+	margin: 0 2px;
+}
+repeat-bar, repeat-bar-num {
+	color: darkslateblue;
+	margin: 0 2px;
+	position: relative;
+	cursor: pointer;
+}
+beat:hover > *, repeat-bar:hover, repeat-bar-num:hover {
+	background-color: #f2f2f2;
+}
+num, repeat-num {
+	display: none;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 0;
+	text-align: center;
+	color: darkgrey;
+	font-size: 50%;
+}
+bar-num {
+	display: none;
+	position: relative;
+	bottom: 12px;
+	font-size: 50%;
+	color: darkgrey;
+	vertical-align: text-top;
+}
+base-beat {
+	position: relative;
+	margin: 0 4px;
+}
+tuplet {
+	position: relative;
+	border-bottom: 1px solid #ea9;
+	margin: 0 4px;
+}
+tuplet > num, base-beat > num {
+	bottom: -2px;
+}
+tuplet-bracket {
+	color: #410;
+	margin: 0 2px;
+}
+tuplet-bracket-auto {
+	color: #9b8077;
+	margin: 0 2px;
+}
+non-chord {
+	color: darkred;
+	margin: 0 2px;
+}
+prolong {
+	color: darkgreen;
+	margin: 0 2px;
+}
+prolong-auto {
+	color: #a7c9a7;
+	margin: 0 2px;
+}
+comment {
+	color: green;
+	margin: 0 5px;
+}
+error {
+	color: red;
+	font-weight: bold;
+	text-decoration: underline;
+}
+bpm {
+	color: orange;
+	margin: 0 2px;
+}
+beat-change, transpose {
+	color: goldenrod;
+	margin: 0 2px;
+}
+button {
+	font-family: sans-serif;
+	font-size: 22px;
+}
+button:enabled {
+	cursor: pointer;
+}
+input[type=number] {
+	width: 60px;
+}
+form, select, input {
+	font-family: sans-serif;
+	font-size: 22px;
+}
+input[type=checkbox] {
+	cursor: pointer;
+	width: 18px;
+	height: 18px;
+	vertical-align: middle;
+}
+label {
+	cursor: pointer;
+	padding-left: 5px;
+	margin-bottom: 3px;
+}
+#show_notes:checked ~ #content notes {
+	display: block;
+}
+#show_nums:checked ~ #content #preview {
+	line-height: 430%;
+}
+#show_nums:checked ~ #content num,
+#show_nums:checked ~ #content repeat-num,
+#show_nums:checked ~ #content bar-num {
+	display: initial;
+}
+#show_nums:checked ~ #content base-beat {
+	padding-bottom: 30px;
+	border-bottom: 1px solid #ea9;
+}
+#show_nums:checked ~ #content tuplet {
+	padding-bottom: 14px;
+}
+.highlighted, beat:hover > .highlighted {
+	background-color: #ffa;
+	border-bottom: 2px solid #f33;
+	margin-bottom: -2px;
+}
+.shaded, beat:hover > .shaded {
+	background-color: #eaf2ff;
+	border-bottom: 2px solid #f96;
+	margin-bottom: -2px;
+}
+.repeating, repeat-bar.repeating:hover {
+	background-color: #f2ffea;
+	border-bottom: 2px solid #fc4;
+	margin-bottom: -2px;
+}
+keyboard-range {
+	display: table;
+}
+keyboard-range * {
+	display: table-cell;
+	width: 7px;
+	min-width: 7px;
+	max-width: 7px;
+	height: 30px;
+	border: 1px solid grey;
+}
+keyboard-range white {
+	background-color: white;
+}
+keyboard-range black {
+	background-color: black;
+}
+</style>
+</head>
+<body>
+<form action="javascript:void(0)" onsubmit="return false">
+	<div>
+		Instrument
+		<select name="instrument">
+			<option value="accordion">Accordion</option>
+			<option value="acoustic_bass">Acoustic Bass</option>
+			<option value="acoustic_grand_piano" selected>Acoustic Grand Piano</option>
+			<option value="acoustic_guitar_nylon">Acoustic Guitar Nylon</option>
+			<option value="acoustic_guitar_steel">Acoustic Guitar Steel</option>
+			<option value="alto_sax">Alto Sax</option>
+			<option value="bagpipe">Bagpipe</option>
+			<option value="banjo">Banjo</option>
+			<option value="baritone_sax">Baritone Sax</option>
+			<option value="brass_section">Brass Section</option>
+			<option value="bright_acoustic_piano">Bright Acoustic Piano</option>
+			<option value="cello">Cello</option>
+			<option value="church_organ">Church Organ</option>
+			<option value="clarinet">Clarinet</option>
+			<option value="clavinet">Clavinet</option>
+			<option value="contrabass">Contrabass</option>
+			<option value="distortion_guitar">Distortion Guitar</option>
+			<option value="drawbar_organ">Drawbar Organ</option>
+			<option value="dulcimer">Dulcimer</option>
+			<option value="electric_grand_piano">Electric Grand Piano</option>
+			<option value="electric_guitar_clean">Electric Guitar Clean</option>
+			<option value="electric_piano_1">Electric Piano 1</option>
+			<option value="electric_piano_2">Electric Piano 2</option>
+			<option value="english_horn">English Horn</option>
+			<option value="fiddle">Fiddle</option>
+			<option value="flute">Flute</option>
+			<option value="french_horn">French Horn</option>
+			<option value="fretless_bass">Fretless Bass</option>
+			<option value="harmonica">Harmonica</option>
+			<option value="harpsichord">Harpsichord</option>
+			<option value="honkytonk_piano">Honkytonk Piano</option>
+			<option value="oboe">Oboe</option>
+			<option value="pan_flute">Pan Flute</option>
+			<option value="percussive_organ">Percussive Organ</option>
+			<option value="piccolo">Piccolo</option>
+			<option value="recorder">Recorder</option>
+			<option value="reed_organ">Reed Organ</option>
+			<option value="rock_organ">Rock Organ</option>
+			<option value="shakuhachi">Shakuhachi</option>
+			<option value="shanai">Shanai</option>
+			<option value="sitar">Sitar</option>
+			<option value="slap_bass_1">Slap Bass 1</option>
+			<option value="slap_bass_2">Slap Bass 2</option>
+			<option value="soprano_sax">Soprano Sax</option>
+			<option value="string_ensemble_1">String Ensemble 1</option>
+			<option value="synth_bass_2">Synth Bass 2</option>
+			<option value="synth_brass_1">Synth Brass 1</option>
+			<option value="synth_brass_2">Synth Brass 2</option>
+			<option value="synth_strings_1">Synth Strings 1</option>
+			<option value="synth_strings_2">Synth Strings 2</option>
+			<option value="tango_accordion">Tango Accordion</option>
+			<option value="tenor_sax">Tenor Sax</option>
+			<option value="tremolo_strings">Tremolo Strings</option>
+			<option value="trombone">Trombone</option>
+			<option value="trumpet">Trumpet</option>
+			<option value="tuba">Tuba</option>
+			<option value="viola">Viola</option>
+			<option value="violin">Violin</option>
+		</select>
+	</div>
+	<div>
+		Metronome
+		<select name="metronome">
+			<option value="0">None</option>
+			<option value="1">Set 1</option>
+			<option value="2">Set 2</option>
+			<option value="3" selected>Set 3</option>
+		</select>
+		Volume
+		<input type="range" min="0" max="1" step="any" value="0.7" name="metronome_vol" />
+	</div>
+	<div>
+		Swing
+		<select name="swing_division">
+			<option value="8n">8th</option>
+			<option value="16n">16th</option>
+			<option value="32n">32nd</option>
+			<option value="64n">64th</option>
+		</select>
+		<input type="range" min="2" max="10" step="1" value="2" name="swing" />
+		<span id="swing_val">1:1</span>
+	</div>
+	<div>
+		Master Volume
+		<input type="range" min="0" max="1" step="any" value="0.7" name="volume" />
+	</div>
+	<input type="checkbox" name="show_notes" id="show_notes" checked /><label for="show_notes">構成音</label>
+	<input type="checkbox" name="show_nums" id="show_nums" checked /><label for="show_nums">数字</label>
+	<input type="checkbox" name="loop" id="loop" checked /><label for="loop">Loop</label>
+	<keyboard-range><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><white></white><black></black><white></white><black></black><white></white><black></black><white></white><white></white></keyboard-range>
+	<div id="content">
+	<textarea id="chords" name="chords" spellcheck="false">// け・も・の・だ・も・の
+[4=162] // [　] 内は BPM
+
+F_Am7_|Cm=Bb_|
+Bbm/Db_F/C&amp;|{2/4}G/B&amp;|{4/4}C_|
+※ ↑ {　} 内は拍子
+// F7|%|%|_|
+
+/* F===____Ab7==A7==Bb7|
+==______Eb7==&amp;==E7|F__|_|
+F===____Ab7==A7==Bb7|
+==______Eb7==&amp;==E7|
+F===____Eb==E==F|=__| */
+
+Bbm/Db|F/C|Em7-5==A7===Dm|
+===Bbm/Db=|F/C|G7/B|
+Bb/C&amp;&amp;&amp;&amp;=&amp;C7/Bb|=__|
+
+/* FAm7|CmBb|
+Bbm/DbF/C|G/BC|
+F/AC7/G|F7(omit3)Bb|
+Bbm/DbF/C|G/BC|
+Bbm/Db|F/C|Bbm|F/A| */
+
+Gm7|DbEb|
+F===____Eb==E==F|
+&lt;=_Ab===&gt;&lt;_G===_&gt;F|_|
+※ ↑ &lt;　&gt; 内は連音
+
+&amp;====&amp;=Db/F|=====&amp;=Eb/F|
+=====&amp;=F|=====&amp;=&amp;|
+=====&amp;=Db/F|%%%%|=====&amp;=Eb/F|
+=====&amp;=F|%%%%|
+=====&amp;=Eb/F|===&amp;&amp;&amp;&amp;F|=__|
+	</textarea>
+	<div id="preview"></div>
+	</div>
+	<input type="range" min="0" max="0" step="any" value="0" name="seekbar" disabled />
+	<div><span id="current">1.000</span>, <span id="duration">0</span></div>
+	<button id="play" disabled>Play</button>
+	<button id="pause" disabled>Pause</button>
+	<button id="stop" disabled>Stop</button>
+	<div id="loading">Loading...</div>
+</form>
+<script src="ChordNote_20191116.js"></script>
+<script src="ChordPlay_20191116.js"></script>
+</body>

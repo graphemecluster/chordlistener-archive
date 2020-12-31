@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>ChordPlay</title>
+<script>var sf = {};</script>
+<script src="piano.js"></script>
+<script src="n_guitar.js"></script>
+<script src="e_guitar.js"></script>
+<script src="d_guitar.js"></script>
+<script src="string.js"></script>
+<script src="music_box.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.2/howler.core.min.js"></script>
+<style>
+* {
+	font-family: sans-serif;
+	font-size: 22px;
+}
+#chords {
+	width: 600px;
+	height: 400px;
+	resize: none;
+	white-space: nowrap;
+}
+input[type=number] {
+	width: 60px;
+}
+#play {
+	display: block;
+}
+</style>
+</head>
+<body>
+<form action="javascript:void(0)" onsubmit="return false">
+	<select name="instrument">
+		<option value="piano">Piano</option>
+		<option value="n_guitar">Nylon Guitar</option>
+		<option value="e_guitar">Electric Guitar</option>
+		<option value="d_guitar">Distortion Guitar</option>
+		<option value="string">String</option>
+		<option value="music_box">Music Box</option>
+	</select>
+	<div><input type="number" name="bpm_note" value="4" /> = <input type="number" name="bpm" value="120" /></div>
+	<div><input type="number" name="beat" value="4" /> / <input type="number" name="beat_note" value="4" /></div>
+	<div><input type="range" min="0" max="100" value="30" name="slider" id="slider" /> <span id="value">30</span></div>
+	<textarea id="chords" name="chords">
+[G3,A3,D4]=_9[A3,C#4,E4]==[B3,D4,F#4]=|_|%%
+// Aメロ
+%%|%%|%%|%%|%%|%%|%%|%%
+// Bメロ
+[C3,D3,E3,G3,A3]|=|[B3,D4,F#4,A4]|=
+[E3,G3,G3,D3]4|[F#3,A3,D4]4|[G3,A3,D4]&amp;7|[A3,D4,E4]&amp;3_
+// サビ
+[Bb3,D4,F4]2[C4,E4,G4]2|[D4,F4,A4]4|[Bb3,D4,F4]2[C4,E4,G4]2|[F3,A3,C4,F4]4
+[Bb3,D4,F4]2[C4,E4,G4]2|[D4,F4,A4]4|[G3,Bb3,D4]2[C4,E4,G4]2|[F3,A3,C4,F4]==&amp;==&amp;=&amp;=3_
+[Bb3,D4,F4]2[C4,E4,G4]2|[D4,F4,A4]4|[Bb3,D4,F4]2[C4,E4,G4]2|[F3,A3,C4,F4]4
+[Bb3,D4,F4]2[C4,E4,G4]2|[C#4,E4,G4,A4]2[D4,F4,A4]2|[G3,Bb3,D4]2[C4,E4,G4]2|[F3,A3,C4,F4]==&amp;==&amp;=&amp;=3_
+
+[G3,A3,D4]=_9[A3,C#4,E4]==[B3,D4,F#4]=|_|%%
+</textarea>
+	<input type="submit" id="play" name="play" value="Play" />
+</form>
+<button id="stop" disabled>Stop</button>
+<script>
+var form = document.forms[0];
+var value = document.getElementById("value");
+var btnStop = document.getElementById("stop");
+var mpm = 2000;
+for (item in sf.piano) sf.piano[item] = new Howl({src: [sf.piano[item]]});
+sf.piano.loaded = true;
+form.instrument.onchange = function() {
+	if (!sf[this.value].loaded) for (item in sf[this.value]) sf[this.value][item] = new Howl({src: [sf[this.value][item]]});
+};
+form.bpm.oninput = form.bpm_note.oninput = form.beat.oninput = form.beat_note.oninput = function() {
+	mpm = 60000 / form.bpm.value * form.bpm_note.value * form.beat.value / form.beat_note.value;
+};
+form.slider.oninput = function() {
+	value.innerHTML = this.value;
+};
+form.play.onclick = function() {
+	var beat = form.beat.value;
+	while (!(beat % 2)) beat /= 2;
+	ChordPlay(form.chords.value, mpm, beat, form.slider.value);
+	form.instrument.disabled = form.bpm.disabled = form.bpm_note.disabled = form.beat.disabled = form.beat_note.disabled = form.slider.disabled = form.chords.disabled = form.play.disabled = true;
+	btnStop.disabled = false;
+};
+</script>
+<script src="ChordPlay.js"></script>
+</body>

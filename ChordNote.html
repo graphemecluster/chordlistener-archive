@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>ChordNote Test</title>
+<script src="ChordNote.js"></script>
+<style>
+#chord {
+	font-family: sans-serif;
+	font-size: 22px;
+	width: 600px;
+	height: 400px;
+	resize: none;
+	white-space: pre;
+	box-sizing: border-box;
+}
+#note {
+	font-family: sans-serif;
+	font-size: 22px;
+	width: 600px;
+	height: 400px;
+	border: 1px solid grey;
+	white-space: pre;
+	overflow: scroll;
+	box-sizing: border-box;
+}
+</style>
+</head>
+<body>
+<textarea id="chord" spellcheck="false"></textarea>
+<div id="note"></div>
+<script>
+var chord = document.getElementById("chord");
+var note = document.getElementById("note");
+chord.oninput = function() {
+	note.innerText = parseContent(chord.value);
+};
+chord.onscroll = function() {
+	if (note.isScrolling) note.isScrolling = false;
+	else {
+		note.scrollTop = this.scrollTop / this.scrollHeight * note.scrollHeight;
+		chord.isScrolling = true;
+	}
+};
+note.onscroll = function() {
+	if (chord.isScrolling) chord.isScrolling = false;
+	else {
+		chord.scrollTop = this.scrollTop / this.scrollHeight * chord.scrollHeight;
+		note.isScrolling = true;
+	}
+};
+if (chord.value) chord.oninput();
+</script>
+</body>
+</html>
